@@ -26,16 +26,19 @@ import Colorer
 import argparse
 import csv
 import sys
+import hashlib
 
+masterkey = 'abcdef'
 
 def addparser_init():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i',
                         help='input csv file')
-    parser.add_argument('-e')
+    parser.add_argument('-p',
+                        help='master key')
     parser.add_argument('--debug',
                         action='store_true',
-                        help='set logging level to ERROR')
+                        help='set logging level to DEBUG')
     return parser
 
 
@@ -46,8 +49,14 @@ def parse_arguments(parser):
     else:
         logging.basicConfig(level=logging.ERROR)
 
+    if args.p:
+        logging.debug('master key set: ' + args.p)
+        global masterkey
+        masterkey = args.p
+
     if args.i:
         read_csv_file(args.i)
+
 
 
 def read_csv_file(file):
@@ -56,9 +65,14 @@ def read_csv_file(file):
         f = open(file, 'rt')
         reader = csv.reader(f)
         for row in reader:
-            print(row)
+            generate_passwords(row[0], row[1])
     except FileNotFoundError:
         logging.error(file + ': File not found')
+
+
+def generate_passwords(domainname, username, n=3):
+    logging.debug(sys._getframe().f_code.co_name + ': ' + domainname + ', ' + username)
+    logging.debug('hashing: ' + domainname[:n] + username[:n] + masterkey)
 
 
 parse_arguments(addparser_init())
