@@ -27,14 +27,13 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i',
-                    action='store_true',
                     help='input csv file')
 parser.add_argument('-e')
-
 parser.add_argument('--debug',
                     action='store_true',
                     help='set logging level to ERROR')
 args = parser.parse_args()
+
 
 if args.debug:
     logging.basicConfig(level=logging.DEBUG)
@@ -42,17 +41,16 @@ else:
     logging.basicConfig(level=logging.ERROR)
 
 if args.i:
-    print('bla')
+    try:
+        with open(args.i, 'r') as f:
+            read_data = f.read()
+            print(read_data)
+    except FileNotFoundError:
+        logging.error(args.i + ': File not found')
 
 def main(args):
-    call_path = args[0]
-    args = args[1:]
-    logging.info(str(args))
-    logging.debug(str(args))
-    logging.error(str(args))
-    return 0
+    logging.basicConfig(level=logging.DEBUG)
 
 if __name__ == '__main__':
     import sys
-
     sys.exit(main(sys.argv))
