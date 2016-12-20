@@ -23,16 +23,34 @@
 #  
 import logging
 import Colorer
+import argparse
 
-logging.basicConfig(level=logging.DEBUG)
+parser = argparse.ArgumentParser()
+parser.add_argument('-i',
+                    action='store_true',
+                    help='input csv file')
+parser.add_argument('-e')
 
+parser.add_argument('--debug',
+                    action='store_true',
+                    help='set logging level to ERROR')
+args = parser.parse_args()
+
+if args.debug:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.ERROR)
+
+if args.i:
+    print('bla')
 
 def main(args):
     call_path = args[0]
     args = args[1:]
+    logging.info(str(args))
     logging.debug(str(args))
+    logging.error(str(args))
     return 0
-
 
 if __name__ == '__main__':
     import sys
