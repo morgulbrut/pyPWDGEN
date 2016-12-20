@@ -24,32 +24,47 @@
 import logging
 import Colorer
 import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-i',
-                    help='input csv file')
-parser.add_argument('-e')
-parser.add_argument('--debug',
-                    action='store_true',
-                    help='set logging level to ERROR')
-args = parser.parse_args()
+import csv
+import sys
 
 
-if args.debug:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.ERROR)
+def addparser_init():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i',
+                        help='input csv file')
+    parser.add_argument('-e')
+    parser.add_argument('--debug',
+                        action='store_true',
+                        help='set logging level to ERROR')
+    return parser
 
-if args.i:
+
+def parse_arguments(parser):
+    args = parser.parse_args()
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
+
+    if args.i:
+        read_csv_file(args.i)
+
+
+def read_csv_file(file):
+    logging.debug(sys._getframe().f_code.co_name)
     try:
-        with open(args.i, 'r') as f:
-            read_data = f.read()
-            print(read_data)
+        f = open(file, 'rt')
+        reader = csv.reader(f)
+        for row in reader:
+            print(row)
     except FileNotFoundError:
-        logging.error(args.i + ': File not found')
+        logging.error(file + ': File not found')
+
+
+parse_arguments(addparser_init())
 
 def main(args):
-    logging.basicConfig(level=logging.DEBUG)
+    pass
 
 if __name__ == '__main__':
     import sys
