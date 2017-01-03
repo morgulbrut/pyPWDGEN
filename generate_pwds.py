@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  main.py
+#  generate_pwds.py
 #  
 #  Copyright 2016 Tillo Bosshart <ti.bo@hotmail.ch>
 #  
@@ -27,8 +27,14 @@ import argparse
 import csv
 import sys
 import hashlib
+import base64
+import os
 
 masterkey = 'abcdef'
+
+log_level = logging.INFO
+FORMAT = '%(levelname)-8s %(message)s'
+
 
 def addparser_init():
     parser = argparse.ArgumentParser()
@@ -45,9 +51,9 @@ def addparser_init():
 def parse_arguments(parser):
     args = parser.parse_args()
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, format=FORMAT)
     else:
-        logging.basicConfig(level=logging.ERROR)
+        logging.basicConfig(level=log_level, format=FORMAT)
 
     if args.p:
         logging.debug('master key set: ' + args.p)
@@ -55,25 +61,42 @@ def parse_arguments(parser):
         masterkey = args.p
 
     if args.i:
-        read_csv_file(args.i)
+        process_csv_file(args.i,'output.csv')
 
 
-
-def read_csv_file(file):
+def process_csv_file(infile,outfile):
     logging.debug(sys._getframe().f_code.co_name)
+    os.remove(outfile)
     try:
-        f = open(file, 'rt')
+        f = open(infile, 'rt')
         reader = csv.reader(f)
         for row in reader:
-            generate_passwords(row[0], row[1])
+            if row[0].strip()[:1] != '#':
+               pwd = generate_passwords(row[0].strip(), row[1].strip())
+               try:
+                   f = open(outfile, 'a')
+                   f.write(pwd+os.linesep)
+               except FileNotFoundError:
+                   logging.error(infile + ': File not found')
     except FileNotFoundError:
-        logging.error(file + ': File not found')
+        logging.error(infile + ': File not found')
 
 
-def generate_passwords(domainname, username, n=3):
+
+def generate_passwords(domainname, username, n=3,length = 16):
     logging.debug(sys._getframe().f_code.co_name + ': ' + domainname + ', ' + username)
-    logging.debug('hashing: ' + domainname[:n] + username[:n] + masterkey)
-
+    pwd_raw = domainname[:n] + username[:n] + masterkey
+    logging.debug('hashing: ' + pwd_raw)
+    pwd = hashlib.sha256(pwd_raw.encode('utf-8')).hexdigest()
+    logging.debug('Password: '+ pwd)
+    ascii_string=''.join(chr(int(pwd[i:i + 2], 16)%92+33) for i in range(0, len(pwd), 2))
+    ascii_string = ascii_string.replace("'","-")
+    ascii_string = ascii_string.replace("`","$")
+    ascii_string = ascii_string.replace('"', "£")
+    ascii_string = ascii_string[:length]
+    ascii_string = '"' + domainname + '","'+ username + '","'+ ascii_string +'"'
+    logging.info(ascii_string)
+    return  ascii_string
 
 parse_arguments(addparser_init())
 
